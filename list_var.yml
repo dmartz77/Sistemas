@@ -1,8 +1,0 @@
----
-- name: Listar contenido de /var
-  hosts: all
-  gather_facts: no
-  tasks:
-    - name: Ejecutar ls -la /var
-      ansible.builtin.command: ls -la /var
-
