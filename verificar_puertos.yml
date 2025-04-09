@@ -49,4 +49,3 @@
           - Puerto {{ p.puerto }}/tcp: {{ p.estado }}
           {% endfor %}
 
-
