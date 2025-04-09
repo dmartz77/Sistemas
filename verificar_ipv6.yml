@@ -1,7 +1,6 @@
 ---
 - name: Verificar si IPv6 está habilitado en sistemas Red Hat
   hosts: all
-  become: true
   gather_facts: true  # Necesario para obtener el hostname
 
   tasks:
