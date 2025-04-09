@@ -1,0 +1,20 @@
+---
+- name: Ejecutar comando del sistema operativo como root
+  hosts: all
+  become: yes
+  vars:
+    comando_a_ejecutar: ""  # Se recomienda pasar por --extra-vars
+
+  tasks:
+    - name: Validar que se proporcionó un comando
+      ansible.builtin.fail:
+        msg: "Debe proporcionar un comando a ejecutar usando --extra-vars 'comando_a_ejecutar=COMANDO'"
+      when: comando_a_ejecutar == ""
+
+    - name: Ejecutar comando con privilegios de root
+      ansible.builtin.shell: "{{ comando_a_ejecutar }}"
+      register: resultado
+
+    - name: Mostrar salida del comando
+      ansible.builtin.debug:
+        var: resultado.stdout
