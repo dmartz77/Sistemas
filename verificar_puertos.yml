@@ -1,7 +1,6 @@
 ---
 - name: Verificar si los puertos TCP están abiertos en el host remoto
-  hosts: localhost
-  connection: local
+  hosts: all
   gather_facts: no
   vars:
     puertos_objetivo: [22, 80, 443]
@@ -20,7 +19,7 @@
         port: "{{ item }}"
         timeout: 3
         state: started
-        host: "{{ inventory_hostname }}"
+        host: "{{ hostvars[inventory_hostname]['ansible_host'] | default(inventory_hostname) }}"
       loop: "{{ puertos_objetivo }}"
       register: resultado_puertos
       ignore_errors: yes
@@ -29,10 +28,10 @@
       ansible.builtin.set_fact:
         puertos_estado: >-
           {{
-            puertos_estado | default([]) + [{
+            puertos_estado | default([]) + [ {
               'puerto': item.item,
               'estado': ('ABIERTO' if not item.failed else 'CERRADO')
-            }]
+            } ]
           }}
       loop: "{{ resultado_puertos.results }}"
 
