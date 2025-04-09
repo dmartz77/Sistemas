@@ -1,0 +1,51 @@
+---
+- name: Verificar si los puertos están abiertos en el host remoto
+  hosts: all
+  gather_facts: no
+  vars:
+    puertos_objetivo: []     # Lista de puertos: [22, 80, 443]
+    protocolo_objetivo: "tcp"  # Protocolo: "tcp" o "udp"
+
+  tasks:
+    - name: Validar que el protocolo especificado sea tcp o udp
+      ansible.builtin.assert:
+        that:
+          - protocolo_objetivo in ['tcp', 'udp']
+        fail_msg: "El valor de 'protocolo_objetivo' debe ser 'tcp' o 'udp'."
+        success_msg: "Protocolo válido: {{ protocolo_objetivo }}"
+
+    - name: Verificar puertos abiertos
+      ansible.builtin.wait_for:
+        port: "{{ item }}"
+        timeout: 3
+        state: started
+        protocol: "{{ protocolo_objetivo }}"
+        host: "{{ inventory_hostname }}"
+      loop: "{{ puertos_objetivo }}"
+      register: resultado_puertos
+      ignore_errors: true
+
+    - name: Construir lista de resultados por puerto
+      ansible.builtin.set_fact:
+        puertos_estado: >-
+          {{
+            puertos_estado | default([]) + [{
+              'puerto': item.item,
+              'estado': ('ABIERTO' if not item.failed else 'CERRADO')
+            }]
+          }}
+      loop: "{{ resultado_puertos.results }}"
+
+    - name: Mostrar resultado por puerto
+      ansible.builtin.debug:
+        msg: "Puerto {{ item.puerto }}/{{ protocolo_objetivo }} está {{ item.estado }}"
+      loop: "{{ puertos_estado }}"
+
+    - name: Mostrar resumen final
+      ansible.builtin.debug:
+        msg: |
+          Resultado final de verificación de puertos en {{ inventory_hostname }}:
+          {% for p in puertos_estado %}
+          - Puerto {{ p.puerto }}/{{ protocolo_objetivo }}: {{ p.estado }}
+          {% endfor %}
+
