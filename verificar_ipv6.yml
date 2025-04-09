@@ -1,0 +1,24 @@
+---
+- name: Verificar si IPv6 está habilitado en sistemas Red Hat
+  hosts: all
+  become: true
+  gather_facts: true  # Necesario para obtener el hostname
+
+  tasks:
+
+    - name: Leer el estado de IPv6 desde /proc/sys/net/ipv6/conf/all/disable_ipv6
+      ansible.builtin.command: cat /proc/sys/net/ipv6/conf/all/disable_ipv6
+      register: ipv6_status
+      changed_when: false
+
+    - name: Mostrar estado de IPv6 con hostname
+      ansible.builtin.debug:
+        msg: >
+          {% if ipv6_status.stdout == '0' %}
+            En el host {{ ansible_hostname }}, IPv6 está HABILITADO.
+          {% elif ipv6_status.stdout == '1' %}
+            En el host {{ ansible_hostname }}, IPv6 está DESHABILITADO.
+          {% else %}
+            En el host {{ ansible_hostname }}, no se pudo determinar el estado de IPv6 (salida: {{ ipv6_status.stdout }}).
+          {% endif %}
+
